@@ -7,6 +7,7 @@ import {
   integer,
   boolean,
   uniqueIndex,
+  real,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -26,9 +27,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   reminders: many(reminders),
 }));
 
-// ============================================================================
-// 2. ТАБЛИЦА: Программы тренировок (training_programs)
-// ============================================================================
 // ============================================================================
 // 2. ТАБЛИЦА: Программы тренировок (training_programs)
 // ============================================================================
@@ -113,7 +111,8 @@ export const sets = pgTable(
       .notNull()
       .references(() => exercises.id),
     setNumber: integer('set_number').notNull(),
-    weight: integer('weight').default(0).notNull(),
+    // ИСПРАВЛЕНО: переведено на real (float) для поддержки дробного веса (например, 54.5)
+    weight: real('weight').default(0).notNull(),
     reps: integer('reps').default(0).notNull(),
   },
   (table) => ({
@@ -142,7 +141,6 @@ export const setsRelations = relations(sets, ({ one }) => ({
 export const reminders = pgTable('reminders', {
   id: serial('id').primaryKey(),
 
-  // ИСПРАВЛЕНО: переведено на bigint для поддержки Telegram ID
   userId: bigint('user_id', { mode: 'number' })
     .notNull()
     .references(() => users.id, {
@@ -206,7 +204,7 @@ export const reminderScheduleRelations = relations(
   ({ one }) => ({
     reminder: one(reminders, {
       fields: [reminderSchedule.reminderId],
-      references: [reminders.id], // <-- Ссылаемся на id из таблицы reminders
+      references: [reminders.id],
     }),
   })
 );
