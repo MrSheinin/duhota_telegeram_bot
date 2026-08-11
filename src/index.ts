@@ -4,14 +4,14 @@ import { sql } from 'drizzle-orm';
 import { ReminderCronService } from './services/reminder.cron.js';
 import { startHttpServer } from './server.js';
 
-// Глобальный перехватчик ошибок Grammy (не даёт боту "засыпать" или умирать при ошибках)
+// Глобальный перехватчик ошибок Grammy (не даёт боту падавать при ошибках в хэндлерах)
 bot.catch((err) => {
   const ctx = err.ctx;
   console.error(`[Grammy Error] Ошибка при обработке update ${ctx.update.update_id}:`);
   console.error(err.error);
 });
 
-// Простейший хэндлер для мгновенной проверки отклика
+// Хэндлер для мгновенной проверки работоспособности
 bot.command('ping', async (ctx) => {
   console.log('--- ПОЛУЧЕНА КОМАНДА /ping ---');
   await ctx.reply('pong 🏓 Бот работает!');
@@ -28,9 +28,14 @@ async function main() {
     await db.execute(sql`SELECT 1`);
     console.log('✅ База данных Supabase успешно подключена.');
 
-    // Очищаем накопившиеся апдейты и сбрасываем старые вебхуки
-    console.log('🔄 Сбрасываем Webhook и старые очереди...');
-    await bot.api.deleteWebhook({ drop_pending_updates: true });
+    // Мягко сбрасываем Webhook в отдельном try/catch (чтобы Gateway Timeout 504 не ломал запуск)
+    try {
+      console.log('🔄 Сбрасываем Webhook...');
+      await bot.api.deleteWebhook();
+      console.log('✅ Webhook успешно сброшен.');
+    } catch (whError) {
+      console.warn('⚠️ Не удалось сбросить Webhook (таймаут Telegram API), продолжаем запуск...');
+    }
 
     // Проверяем авторизацию токена в Telegram API
     const botInfo = await bot.api.getMe();
@@ -49,7 +54,7 @@ async function main() {
       },
     });
   } catch (error) {
-    console.error('❌ Ошибка при запуске приложения:', error);
+    console.error('❌ Критическая ошибка при запуске приложения:', error);
     process.exit(1);
   }
 }
