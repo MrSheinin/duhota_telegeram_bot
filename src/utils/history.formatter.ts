@@ -33,7 +33,10 @@ export function formatWorkoutCard(workout: NonNullable<WorkoutDetails>): string 
     const safeExName = escapeMarkdown(exName);
     lines.push(`🏋️ *${safeExName}*`);
     setsList.forEach((s) => {
-      lines.push(`  • ${s.weight} × ${s.reps}`);
+      // ЭКРАНИРУЕМ ВЕС И ПОВТОРЫ:
+      const safeWeight = escapeMarkdown(s.weight);
+      const safeReps = escapeMarkdown(s.reps);
+      lines.push(`  • ${safeWeight} × ${safeReps}`);
     });
     lines.push(``);
   });

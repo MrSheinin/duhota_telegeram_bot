@@ -3,7 +3,7 @@ import { CustomContext } from '../context.js';
 import { HistoryService, HistoryPeriod } from '../../services/history.service.js';
 import { HistoryScreen } from '../screens/history.screen.js';
 import { ExcelService } from '../../services/excel.service.js';
-import { escapeMarkdown } from '../../utils/markdown.js';
+import { escapeCodeMarkdown } from '../../utils/markdown.js';
 
 export const historyComposer = new Composer<CustomContext>();
 
@@ -147,8 +147,8 @@ historyComposer.callbackQuery(/^hist_download:(week|month|year|all)$/, async (ct
       }
     }
 
-    // Использование внешнего модуля utils/markdown.ts для безопасного вывода
-    const safeFileName = escapeMarkdown(fileName);
+    // Для моноширинного кода используем безопасное экранирование (без поломки точек и дефисов)
+    const safeFileName = escapeCodeMarkdown(fileName);
 
     const sentMessage = await ctx.replyWithDocument(inputFile, {
       caption: `📊 *На, держи свой отчёт по тренировкам, блядь\\!*\n📁 Файл: \`${safeFileName}\`\n\nСмотри, сколько ты отпахал, и только попробуй сдуться, сука\\!`,
